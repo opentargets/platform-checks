@@ -50,9 +50,9 @@ checkomatic:
           output = so_label in to_vlist(parser.find(d))
       ENSG00000143119-EFO_0003767:
         # Check that there is SysBio evidence supporting CD53-IBD association
-      - |-
-        parser = jp.parse('data[*].sourceID')
-        output = 'sysbio' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
     searches:
       diseases:
         "crohn disease":
