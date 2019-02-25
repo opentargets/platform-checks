@@ -53,7 +53,10 @@ checkomatic:
         - |-
           parser = jp.parse('data[*].sourceID')
           output = 'sysbio' in to_vlist(parser.find(d))
-    searches:
+        # Check that there are 2 SysBio gene-sets supporting the CD53-IBD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = to_vlist(parser.find(d)).count('sysbio') == 2
       diseases:
         "crohn disease":
           - len(o.data) > 0
