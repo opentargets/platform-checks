@@ -57,6 +57,16 @@ checkomatic:
         - |-
           parser = jp.parse('data[*].sourceID')
           output = to_vlist(parser.find(d)).count('sysbio') == 2
+      ENSG00000160219-EFO_0003767:
+        # Check that there is SysBio evidence supporting GAB3-IBD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
+        # Check that there are 2 SysBio gene-sets supporting the GAB3-IBD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = to_vlist(parser.find(d)).count('sysbio') == 1
+    searches:
       diseases:
         "crohn disease":
           - len(o.data) > 0
