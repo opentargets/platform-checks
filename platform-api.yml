@@ -48,6 +48,46 @@ checkomatic:
           so_label = 'missense_variant'
           parser = jp.parse('data[*].evidence.evidence_codes_info[*][*].label')
           output = so_label in to_vlist(parser.find(d))
+      ENSG00000143119-EFO_0003767:
+        # Check that there is SysBio evidence supporting CD53-IBD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
+        # Check that there are 2 SysBio gene-sets supporting the CD53-IBD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = to_vlist(parser.find(d)).count('sysbio') == 2
+      ENSG00000160219-EFO_0003767:
+        # Check that there is SysBio evidence supporting GAB3-IBD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
+        # Check that there is a single SysBio gene-set supporting the GAB3-IBD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = to_vlist(parser.find(d)).count('sysbio') == 1
+      # Check that there is SysBio evidence associating FCER1G with IBD and LOAD
+      ENSG00000158869-EFO_0003767:
+        # Two gene-sets supporting FCER1G-IBD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = to_vlist(parser.find(d)).count('sysbio') == 2
+      ENSG00000158869-EFO_1001870:
+        # Single gene-set supporting FCER1G-LOAD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = to_vlist(parser.find(d)).count('sysbio') == 1
+      ENSG00000082438-EFO_0001645:
+        # Check that there is SysBio evidence supporting COBLL1-CHD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
     searches:
       diseases:
         "crohn disease":
