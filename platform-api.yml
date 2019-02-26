@@ -62,7 +62,7 @@ checkomatic:
         - |-
           parser = jp.parse('data[*].sourceID')
           output = 'sysbio' in to_vlist(parser.find(d))
-        # Check that there are 2 SysBio gene-sets supporting the GAB3-IBD association
+        # Check that there is a single SysBio gene-set supporting the GAB3-IBD association
         - |-
           parser = jp.parse('data[*].sourceID')
           output = to_vlist(parser.find(d)).count('sysbio') == 1
