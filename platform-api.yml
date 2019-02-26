@@ -77,12 +77,17 @@ checkomatic:
           output = to_vlist(parser.find(d)).count('sysbio') == 2
       ENSG00000158869-EFO_1001870:
         # Single gene-set supporting FCER1G-LOAD association
-      - |-
-        parser = jp.parse('data[*].sourceID')
-        output = 'sysbio' in to_vlist(parser.find(d))
-      - |-
-        parser = jp.parse('data[*].sourceID')
-        output = to_vlist(parser.find(d)).count('sysbio') == 1
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = to_vlist(parser.find(d)).count('sysbio') == 1
+      ENSG00000082438-EFO_0001645:
+        # Check that there is SysBio evidence supporting COBLL1-CHD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
     searches:
       diseases:
         "crohn disease":
