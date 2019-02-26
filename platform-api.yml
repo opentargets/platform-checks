@@ -66,6 +66,23 @@ checkomatic:
         - |-
           parser = jp.parse('data[*].sourceID')
           output = to_vlist(parser.find(d)).count('sysbio') == 1
+      # Check that there is SysBio evidence associating FCER1G with IBD and LOAD
+      ENSG00000158869-EFO_0003767:
+        # Two gene-sets supporting FCER1G-IBD association
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = 'sysbio' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          output = to_vlist(parser.find(d)).count('sysbio') == 2
+      ENSG00000158869-EFO_1001870:
+        # Single gene-set supporting FCER1G-LOAD association
+      - |-
+        parser = jp.parse('data[*].sourceID')
+        output = 'sysbio' in to_vlist(parser.find(d))
+      - |-
+        parser = jp.parse('data[*].sourceID')
+        output = to_vlist(parser.find(d)).count('sysbio') == 1
     searches:
       diseases:
         "crohn disease":
