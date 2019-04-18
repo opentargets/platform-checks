@@ -9,10 +9,12 @@ checkomatic:
         - o.approved_symbol == 'DMD'
         - o.approved_name == 'dystrophin'
         - o.tractability.smallmolecule.top_category == 'Unknown'
+        - len(o.tractability.smallmolecule.buckets) == 0
         - o.tractability.antibody.top_category == 'Predicted Tractable - High confidence'
       ENSG00000188906:
         - o.approved_symbol == 'LRRK2'
         - o.tractability.smallmolecule.top_category == 'Discovery_Precedence'
+        - len(o.tractability.smallmolecule.buckets) > 0
         - o.tractability.antibody.top_category == 'Predicted Tractable - High confidence'
     diseases:
       Orphanet_908:
