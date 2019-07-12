@@ -2,52 +2,115 @@ checkomatic:
   client:
     host: https://platform-api.opentargets.io
     port: 443
-    size: 500 # max size to fetch when query and it is applicable
+    size: 1000 # max size to fetch when query and it is applicable
   rules:
     targets:
-      ENSG00000198947:
-        - o.approved_symbol == 'DMD'
-        - o.approved_name == 'dystrophin'
-        - o.tractability.smallmolecule.top_category == 'Unknown'
-        - len(o.tractability.smallmolecule.buckets) == 0
+      ENSG00000001626:
+        - o.approved_symbol == 'CFTR'
+        - o.approved_name == 'CF transmembrane conductance regulator'
+        - o.hgnc_id == 'HGNC:1884'
+        - ('P13569' in o.uniprot_accessions)
+        - (2772657 in o.pubmed_ids)
         - o.tractability.antibody.top_category == 'Predicted Tractable - High confidence'
-      ENSG00000188906:
-        - o.approved_symbol == 'LRRK2'
-        - o.tractability.smallmolecule.top_category == 'Discovery_Precedence'
-        - len(o.tractability.smallmolecule.buckets) > 0
+        - len(o.tractability.antibody.buckets) > 0
+        - |-
+          parser = jp.parse('mouse_phenotypes[*].phenotypes[*].category_mp_label')
+          output = 'respiratory system phenotype' in to_vlist(parser.find(d))
+      ENSG00000157764:
+        - o.approved_symbol == 'BRAF'
+        - o.approved_name == 'B-Raf proto-oncogene, serine/threonine kinase'
+        - o.hgnc_id == 'HGNC:1097'
+        - (2284096 in o.pubmed_ids)
         - o.tractability.antibody.top_category == 'Predicted Tractable - High confidence'
+        - len(o.tractability.antibody.buckets) > 0
+        - |-
+          parser = jp.parse('safety.safety_risk_info[*].organs_systems_affected[*].code')
+          output = 'UBERON_0004535' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('ortholog.rat[*].ortholog_species_entrez_gene')
+          output = '114486' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('drugs.chembl_drugs[*].synonyms[*]')
+          output = 'ZELBORAF' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('hallmarks.cancer_hallmarks[*].label')
+          in_label = 'proliferative signalling' in to_vset(parser.find(d))
+          parser = jp.parse('hallmarks.cancer_hallmarks[*].promote')
+          in_promote = (True in to_vset(parser.find(d)))
+          output = in_label and in_promote
+        - |-
+          parser = jp.parse('reactome[*].value."pathway name"')
+          output = 'Negative regulation of MAPK pathway' in to_vlist(parser.find(d))
     diseases:
-      Orphanet_908:
-        - o.label == 'Fragile X syndrome'
-        - ('eye disease' in o.therapeutic_labels)
-      Orphanet_273:
-        - o.label == 'Steinert myotonic dystrophy'
-      Orphanet_93256:
-        - o.label == 'Fragile X-associated tremor/ataxia syndrome'
+      Orphanet_262:
+        - o.label == 'Duchenne and Becker muscular dystrophy'
+        - ('Severe dystrophinopathy, Duchenne and Becker type' in o.efo_synonyms)
+        - ('skeletal system disease' in o.therapeutic_labels)
+        - |-
+          parser = jp.parse('phenotypes[*].label')
+          output = 'gait disturbance' in to_vlist(parser.find(d))
+      EFO_0003885:
+        - o.label == 'multiple sclerosis'
+        - ('Sclerosis, Multiple' in o.efo_synonyms)
+        - ('nervous system disease' in o.therapeutic_labels)
+        - |-
+          parser = jp.parse('phenotypes[*].label')
+          output = not set(["Cerebral atrophy", "weakness", "Peripheral demyelination"]) - to_vset(parser.find(d))
+        - |-
+          parser = jp.parse('children[*].code')
+          output = 'EFO_0003929' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('path_labels[*][*]')
+          output = 'autoimmune disease' in to_vlist(parser.find(d))
     associations:
       targets:
-        PRDX1:
-        DMD:
-          - ('Orphanet_98896' in to_vlist(jp.parse('data[*].disease.id').find(d)))
-        CD86:
-          - ('EFO_0003885' in to_vlist(jp.parse('data[*].disease.id').find(d)))
-        ITGAL:
-          - ('EFO_0003767' in to_vlist(jp.parse('data[*].disease.id').find(d)))
+        CFTR:
+          - |-
+            parser = jp.parse('data[*].id')
+            output = not set(['ENSG00000001626-Orphanet_586', 'ENSG00000001626-EFO_0000508']) - to_vset(parser.find(d))
+        BRAF:
+          - |-
+            parser = jp.parse('data[*].id')
+            output = not set(['ENSG00000157764-Orphanet_500', 'ENSG00000157764-EFO_0003060']) - to_vset(parser.find(d))
       diseases:
-        Orphanet_93256:
-        EFO_0003767:
-          # NOD2, IL10RA, IL23R, ITGAL in IBD
-          - not set(['NOD2', 'IL10RA', 'ITGAL']) - to_vset(jp.parse('data[*].target.gene_info.symbol').find(d))
-        EFO_0000384:
-          # TNF, PTGS2, PTGS1 in crohns disease
-          - not set(['TNF', 'PTGS2', 'PTGS1']) - to_vset(jp.parse('data[*].target.gene_info.symbol').find(d))
-        EFO_0000249:
-          # APP, SORL1, ABCA7, ADAM10 in alzheimers disease
-          - not set(['APP', 'SORL1', 'ABCA7', 'ADAM10']) - to_vset(jp.parse('data[*].target.gene_info.symbol').find(d))
-        Orphanet_399:
-          # huntington disease
-          - not set(['HTT']) - to_vset(jp.parse('data[*].target.gene_info.symbol').find(d))
+        Orphanet_262:
+          - |-
+            parser = jp.parse('data[*].target.gene_info.symbol')
+            output = not set(['LTBP4', 'DMD']) - to_vset(parser.find(d))
+        EFO_0003885:
+          - |-
+            parser = jp.parse('data[*].target.gene_info.symbol')
+            output = not set(['CD86', 'IL7R']) - to_vset(parser.find(d))
     evidences:
+      ENSG00000141510-EFO_0002618:
+        # TP53 and pancreatic carcinoma
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs28934576' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].evidence.known_mutations[*].preferred_name')
+          output = 'amino_acid_insertion' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].evidence.known_mutations[*].preferred_name')
+          output = 'stop_gained' in to_vlist(parser.find(d))
+      ENSG00000096968-EFO_0002690:
+        # JAK2 and systemic lupus erythematosus
+        - |-
+          parser = jp.parse('data[*].drug.molecule_name')
+          output = 'BARICITINIB' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].evidence.drug2clinic.clinical_trial_phase.label')
+          output = ('Phase III' in to_vlist(parser.find(d))) or ('Phase II' in to_vlist(parser.find(d)))
+        - |-
+          parser = jp.parse('data[*].target.activity')
+          output = 'increased_transcript_level' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.publicationIDs')
+          output = 'http://europepmc.org/abstract/MED/30043749' in to_vlist(parser.find(d))
+      ENSG00000165392-EFO_1001951:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.pmid')
+          output = '30971826' in to_vlist(parser.find(d))
       ENSG00000102081-Orphanet_908:
         - |-
           # http://purl.obolibrary.org/obo/SO_0001583
@@ -94,20 +157,35 @@ checkomatic:
         - |-
           parser = jp.parse('data[*].sourceID')
           output = 'sysbio' in to_vlist(parser.find(d))
+      ENSG00000164050-HP_0001268:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.gene_set')
+          output = 'Genes prioritised from module m109' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.pmid')
+          output = '29802388' in to_vlist(parser.find(d))
     searches:
       diseases:
         "crohn disease":
           - len(o.data) > 0
-        Orphanet_908:
-          - o.data[0].data.name == 'Fragile X syndrome'
-          - o.data[0].data.association_counts.total > 400
-          - o.data[0].data.association_counts.direct > 400
+          - ("Crohn's associated gastritis" in o.data[0].data.efo_synonyms)
       targets:
-        "mt-nd":
+        "INS":
           - len(o.data) > 0
+          - o.data[0].data.name == 'INS'
+          - o.data[0].data.ensembl_gene_id == 'ENSG00000254647'
+          - o.data[0].data.association_counts.direct > 1000
+          - o.data[0].data.association_counts.total > 1900
+        "Durvalumab":
+          - |-
+            parser = jp.parse('data[*].data.name')
+            output = 'CD274' in to_vlist(parser.find(d))
+        "viagra":
+          - |-
+            parser = jp.parse('data[*].data.name')
+            output = ('PDE5A' in to_vlist(parser.find(d)))
     stats:
-      #      - o.data_version == "19.02"
-      - o.targets.total > 28000 and o.targets.total < 50000
+      - o.targets.total > 27000 and o.targets.total < 50000
       - o.diseases.total > 10000 and o.diseases.total < 20000
       - len(o.associations.datatypes.keys()) == 7
       - ('sysbio' in o.associations.datatypes.affected_pathway.datasources)
@@ -116,7 +194,6 @@ checkomatic:
         dss = []
         for dt in dts:
           dss += o.associations.datatypes[dt].datasources.keys()
-        output = len(dss) >= 19
+        output = len(dss) >= 20
     metrics:
-      #      - o.data_version == "19.02"
       - o.genes.approved_symbol.doc_count > 58000
