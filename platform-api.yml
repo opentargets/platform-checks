@@ -5,6 +5,58 @@ checkomatic:
     size: 1000 # max size to fetch when query and it is applicable
   rules:
     targets:
+      ENSG00000146648:
+        - o.approved_symbol == 'EGFR'
+        - o.approved_name == 'epidermal growth factor receptor'
+        - o.hgnc_id == 'HGNC:3236'
+        - ('P00533' in o.uniprot_accessions)
+        - 1505215 in o.pubmed_ids
+        - ('HER1' in o.symbol_synonyms)
+        - |-
+          parser = jp.parse('pfam[*].id')
+          output = 'PF00757' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('go[*].value.term')
+          output = 'C:plasma membrane' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('go[*].value.evidence')
+          output = 'ECO:0000318' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('safety.safety_risk_info[*].organs_systems_affected[*].mapped_term')
+          output = 'cardiovascular system' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('cancerbiomarkers[*].diseases[*].label')
+          output = 'Non-small cell lung cancer' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('cancerbiomarkers[*].association')
+          output = 'Resistant' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('cancerbiomarkers[*].evidencelevel')
+          output = 'Case report' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('hallmarks.attributes[*].description')
+          output = 'oncogene' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('drugbank[*]')
+          output = {'id': 'DB00002', 'value': {'generic name': 'Cetuximab'}} in to_vlist(parser.find(d))
+      ENSG00000232810:
+        - o.approved_symbol == 'TNF'
+        - o.approved_name == 'tumor necrosis factor'
+        - o.hgnc_id == 'HGNC:11892'
+        - ('P01375' in o.uniprot_accessions)
+        - 2413547 in o.pubmed_ids
+        - o.tractability.antibody.top_category == "Clinical Precedence"
+        - (1 in o.tractability.antibody.buckets)
+        - len(o.tractability.antibody.buckets) > 0
+        - ('Reactome:R-HSA-75893' in o.dbxrefs)
+        - o.chemicalprobes.probeminer.link == "https://probeminer.icr.ac.uk/#/P01375"
+        - o.chemicalprobes.probeminer.probenumber == 398
+        - |-
+          parser = jp.parse('reactome[*].value."pathway name"')
+          output = 'TNF signaling' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('pdb[*].id')
+          output = '5YOY' in to_vlist(parser.find(d))
       ENSG00000001626:
         - o.approved_symbol == 'CFTR'
         - o.approved_name == 'CF transmembrane conductance regulator'
