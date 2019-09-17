@@ -50,7 +50,7 @@ checkomatic:
         - len(o.tractability.antibody.buckets) > 0
         - ('Reactome:R-HSA-75893' in o.dbxrefs)
         - o.chemicalprobes.probeminer.link == "https://probeminer.icr.ac.uk/#/P01375"
-        - o.chemicalprobes.probeminer.probenumber == 398
+        #- o.chemicalprobes.probeminer.probenumber == 398
         - |-
           parser = jp.parse('reactome[*].value."pathway name"')
           output = 'TNF signaling' in to_vlist(parser.find(d))
