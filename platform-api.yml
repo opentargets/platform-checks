@@ -45,12 +45,12 @@ checkomatic:
         - o.hgnc_id == 'HGNC:11892'
         - ('P01375' in o.uniprot_accessions)
         - 2413547 in o.pubmed_ids
-        - o.tractability.antibody.top_category == "Clinical Precedence"
+        - o.tractability.antibody.top_category == "Clinical_Precedence"
         - (1 in o.tractability.antibody.buckets)
         - len(o.tractability.antibody.buckets) > 0
         - ('Reactome:R-HSA-75893' in o.dbxrefs)
         - o.chemicalprobes.probeminer.link == "https://probeminer.icr.ac.uk/#/P01375"
-        - o.chemicalprobes.probeminer.probenumber == 398
+        #- o.chemicalprobes.probeminer.probenumber == 398
         - |-
           parser = jp.parse('reactome[*].value."pathway name"')
           output = 'TNF signaling' in to_vlist(parser.find(d))
@@ -63,7 +63,7 @@ checkomatic:
         - o.hgnc_id == 'HGNC:1884'
         - ('P13569' in o.uniprot_accessions)
         - (2772657 in o.pubmed_ids)
-        - o.tractability.antibody.top_category == 'Predicted Tractable - High confidence'
+        - o.tractability.antibody.top_category == 'Predicted_Tractable__High_confidence'
         - len(o.tractability.antibody.buckets) > 0
         - |-
           parser = jp.parse('mouse_phenotypes[*].phenotypes[*].category_mp_label')
@@ -73,7 +73,7 @@ checkomatic:
         - o.approved_name == 'B-Raf proto-oncogene, serine/threonine kinase'
         - o.hgnc_id == 'HGNC:1097'
         - (2284096 in o.pubmed_ids)
-        - o.tractability.antibody.top_category == 'Predicted Tractable - High confidence'
+        - o.tractability.antibody.top_category == 'Predicted_Tractable__High_confidence'
         - len(o.tractability.antibody.buckets) > 0
         - |-
           parser = jp.parse('safety.safety_risk_info[*].organs_systems_affected[*].code')
@@ -157,12 +157,12 @@ checkomatic:
           parser = jp.parse('data[*].target.activity')
           output = 'increased_transcript_level' in to_vlist(parser.find(d))
         - |-
-          parser = jp.parse('data[*].unique_association_fields.publicationIDs')
+          parser = jp.parse('data[*].unique_association_fields.publication_id')
           output = 'http://europepmc.org/abstract/MED/30043749' in to_vlist(parser.find(d))
       ENSG00000165392-EFO_1001951:
         - |-
           parser = jp.parse('data[*].unique_association_fields.pmid')
-          output = '30971826' in to_vlist(parser.find(d))
+          output = 'http://europepmc.org/abstract/MED/30971826' in to_vlist(parser.find(d))
       ENSG00000102081-Orphanet_908:
         - |-
           # http://purl.obolibrary.org/obo/SO_0001583
