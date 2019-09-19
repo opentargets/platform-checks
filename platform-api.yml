@@ -157,12 +157,12 @@ checkomatic:
           parser = jp.parse('data[*].target.activity')
           output = 'increased_transcript_level' in to_vlist(parser.find(d))
         - |-
-          parser = jp.parse('data[*].unique_association_fields.publicationIDs')
+          parser = jp.parse('data[*].unique_association_fields.publication_id')
           output = 'http://europepmc.org/abstract/MED/30043749' in to_vlist(parser.find(d))
       ENSG00000165392-EFO_1001951:
         - |-
           parser = jp.parse('data[*].unique_association_fields.pmid')
-          output = '30971826' in to_vlist(parser.find(d))
+          output = 'http://europepmc.org/abstract/MED/30971826' in to_vlist(parser.find(d))
       ENSG00000102081-Orphanet_908:
         - |-
           # http://purl.obolibrary.org/obo/SO_0001583
