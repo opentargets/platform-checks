@@ -45,7 +45,7 @@ checkomatic:
         - o.hgnc_id == 'HGNC:11892'
         - ('P01375' in o.uniprot_accessions)
         - 2413547 in o.pubmed_ids
-        - o.tractability.antibody.top_category == "Clinical_Precedence"
+        - o.tractability.antibody.top_category == "Clinical_Precedence_ab"
         - (1 in o.tractability.antibody.buckets)
         - len(o.tractability.antibody.buckets) > 0
         - ('Reactome:R-HSA-75893' in o.dbxrefs)
@@ -63,7 +63,7 @@ checkomatic:
         - o.hgnc_id == 'HGNC:1884'
         - ('P13569' in o.uniprot_accessions)
         - (2772657 in o.pubmed_ids)
-        - o.tractability.antibody.top_category == 'Predicted_Tractable__High_confidence'
+        - o.tractability.antibody.top_category == 'Predicted_Tractable_ab_High_confidence'
         - len(o.tractability.antibody.buckets) > 0
         - |-
           parser = jp.parse('mouse_phenotypes[*].phenotypes[*].category_mp_label')
@@ -73,7 +73,7 @@ checkomatic:
         - o.approved_name == 'B-Raf proto-oncogene, serine/threonine kinase'
         - o.hgnc_id == 'HGNC:1097'
         - (2284096 in o.pubmed_ids)
-        - o.tractability.antibody.top_category == 'Predicted_Tractable__High_confidence'
+        - o.tractability.antibody.top_category == 'Predicted_Tractable_ab_High_confidence'
         - len(o.tractability.antibody.buckets) > 0
         - |-
           parser = jp.parse('safety.safety_risk_info[*].organs_systems_affected[*].code')
@@ -97,10 +97,10 @@ checkomatic:
       Orphanet_262:
         - o.label == 'Duchenne and Becker muscular dystrophy'
         - ('Severe dystrophinopathy, Duchenne and Becker type' in o.efo_synonyms)
-        - ('skeletal system disease' in o.therapeutic_labels)
+        - ('nervous system disease' in o.therapeutic_labels)
         - |-
           parser = jp.parse('phenotypes[*].label')
-          output = 'gait disturbance' in to_vlist(parser.find(d))
+          output = 'Gait disturbance' in to_vlist(parser.find(d))
       EFO_0003885:
         - o.label == 'multiple sclerosis'
         - ('Sclerosis, Multiple' in o.efo_synonyms)
