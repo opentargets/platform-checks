@@ -114,6 +114,16 @@ checkomatic:
         - len(o.tractability.smallmolecule.buckets) == 0
         - len(o.tractability.antibody.buckets) == 0
         - len(o.tractability.other_modalities.buckets) == 0
+      ENSG00000118777:
+        - o.approved_symbol == 'ABCG2'
+        # test that response includes experimental toxicity data from Tox21 and eTOX
+        - len(o.safety.experimental_toxicity) > 0
+        - |-
+          parser = jp.parse('safety.experimental_toxicity[*].data_source')
+          output = 'Tox21' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('safety.experimental_toxicity[*].data_source')
+          output = 'eTOX' in to_vlist(parser.find(d))
     diseases:
       Orphanet_262:
         - o.label == 'Duchenne and Becker muscular dystrophy'
