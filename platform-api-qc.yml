@@ -93,6 +93,27 @@ checkomatic:
         - |-
           parser = jp.parse('reactome[*].value."pathway name"')
           output = 'Negative regulation of MAPK pathway' in to_vlist(parser.find(d))
+      ENSG00000171560:
+        - o.approved_symbol == 'FGA'
+        # test that other modality bucket 1 tractability data is available
+        - (1 in o.tractability.other_modalities.buckets)
+        - len(o.tractability.other_modalities.buckets) > 0
+      ENSG00000227507:
+        - o.approved_symbol == 'LTB'
+        # test that other modality bucket 2 tractability data is available
+        - (2 in o.tractability.other_modalities.buckets)
+        - len(o.tractability.other_modalities.buckets) > 0
+      ENSG00000151892:
+        - o.approved_symbol == 'GFRA1'
+        # test that other modality bucket 3 tractability data is available
+        - (3 in o.tractability.other_modalities.buckets)
+        - len(o.tractability.other_modalities.buckets) > 0
+      ENSG00000184900:
+        - o.approved_symbol == 'SUMO3'
+        # test that all bucket arrays are empty as no tractability data is available
+        - len(o.tractability.smallmolecule.buckets) == 0
+        - len(o.tractability.antibody.buckets) == 0
+        - len(o.tractability.other_modalities.buckets) == 0
     diseases:
       Orphanet_262:
         - o.label == 'Duchenne and Becker muscular dystrophy'
