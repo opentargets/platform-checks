@@ -6,6 +6,17 @@ checkomatic:
   rules:
     associations:
       targets:
+        ENSG00000165392:
+          # Checking if at least 8 disease are associated to target supported by crispr:
+          - |-
+            parser = jp.parse('data[*].association_score.datasources.crispr')
+            supported_by_crispr = [x for x in to_vlist(parser.find(d)) if x != 0]
+            output = len(supported_by_crispr) >= 8
+          # Checking if crispr scores are high for certain associations for this target:
+          - |-
+            parser = jp.parse('data[*].disease.efo_info.label')
+            diseases_to_test = set(['neoplasm', 'colorectal carcinoma', 'ovarian carcinoma'])
+            output = not diseases_to_test - to_vset(parser.find(d))
         BRAF:
           - |-
             parser = jp.parse('data[*].disease.efo_info.label')
@@ -27,6 +38,30 @@ checkomatic:
             parser = jp.parse('data[*].disease.efo_info.label')
             output = 'COVID-19' in to_vset(parser.find(d))
       diseases:
+        EFO_0001071:
+          # Checking if at least 110 targets are associated to this disease supported by crispr:
+          - |-
+            parser = jp.parse('data[*].association_score.datasources.crispr')
+            supported_by_crispr = [x for x in to_vlist(parser.find(d)) if x != 0]
+            output = len(supported_by_crispr) >= 110
+          # Checking if crispr scores are high for certain associations for this disease:
+          - |-
+            parser = jp.parse('data[*]')
+            genes_to_test = set(['ERBB3', 'KRAS', 'RHOA', 'TPT1'])
+            genes_supported_by_crispr = [x['target']['gene_info']['symbol'] for x in to_vlist(parser.find(d)) if x['association_score']['datasources']['crispr'] > 0]
+            output = not genes_to_test - set(genes_supported_by_crispr)
+        EFO_0000178:
+          # Checkingif at least 160 targets are associated through crispr
+          - |-
+            parser = jp.parse('data[*].association_score.datasources.crispr')
+            supported_by_crispr = [x for x in to_vlist(parser.find(d)) if x != 0]
+            output = len(supported_by_crispr) >= 160
+          # Checking if crispr scores are high for certain associations for this disease:
+          - |-
+            parser = jp.parse('data[*]')
+            genes_to_test = set(['FGFR2', 'CCNA2'])
+            genes_supported_by_crispr = [x['target']['gene_info']['symbol'] for x in to_vlist(parser.find(d)) if x['association_score']['datasources']['crispr'] > 0]
+            output = not genes_to_test - set(genes_supported_by_crispr)   
         EFO_0003767:
           # Checking if a ceratin set of genes is associated with the disease:
           - |-
@@ -96,6 +131,25 @@ checkomatic:
           tested_phenotypes = ["Abnormality of the immune system", "Optic neuritis", "Age of death"]
           output = all([x in phenotypes for x in tested_phenotypes])
     targets:
+      # Testing chemical probes:
+      ENSG00000005339:
+        # Is there all four probes:
+        - len( o.chemicalprobes.portalprobes) == 4
+        # Are the probes these:
+        - |-
+          parser = jp.parse('chemicalprobes.portalprobes[*].chemicalprobe')
+          probes = set(['A-485','PF-CBP1','I-CBP112','SGC-CBP30'])
+          output = not probes - to_vset(parser.find(d))
+        # Testing if the links to the probes are there:
+        - |-
+          parser = jp.parse('chemicalprobes.portalprobes[*]')
+          are_there_links = [ 'sourcelinks' in x for x in to_vlist(parser.find(d)) ]
+          output = all(are_there_links)
+        # Testing if the links are pointing to right directions:
+        - |-
+          parser = jp.parse('chemicalprobes.portalprobes[*]')
+          links_look_good = [probe['chemicalprobe'] in source['link'] for probe in to_vlist(parser.find(d)) for source in probe['sourcelinks'] ]
+          output = all(are_there_links)
       ENSG00000167397:
         # Checking drug for gene:
         - |-
@@ -147,6 +201,36 @@ checkomatic:
           expected_supressed = set(['tumour promoting inflammation', 'invasion and metastasis', 'angiogenesis', 'genome instability and mutations', 'cell replicative immortality', 'escaping programmed cell death'])
           output = not expected_supressed - set(supressed)
     evidences:
+      ENSG00000133112-EFO_0001071:
+        # Testing the crispr evidence for this pair:
+        - |-
+          parser = jp.parse('data[*]')
+          crispr_evidence = [evidence['evidence']['resource_score']['value'] for evidence in to_vlist(parser.find(d)) if evidence['sourceID'] == 'crispr']
+          output = 0.408333 in crispr_evidence
+        - |-
+          parser = jp.parse('data[*]')
+          crispr_method = [evidence['evidence']['resource_score']['method']['description'] for evidence in to_vlist(parser.find(d)) if evidence['sourceID'] == 'crispr']
+          output = "63 targets were prioritised based on CRISPR screens in 11 squamous cell lung carcinoma cell lines." in crispr_method
+      ENSG00000145386-EFO_0000178:
+        # Testing the crispr evidence for this pair:
+        - |-
+          parser = jp.parse('data[*]')
+          crispr_evidence = [evidence['evidence']['resource_score']['value'] for evidence in to_vlist(parser.find(d)) if evidence['sourceID'] == 'crispr']
+          output = 0.545227 in crispr_evidence
+        - |-
+          parser = jp.parse('data[*]')
+          crispr_method = [evidence['evidence']['resource_score']['method']['description'] for evidence in to_vlist(parser.find(d)) if evidence['sourceID'] == 'crispr']
+          output = "168 targets were prioritised based on CRISPR screens in 18 gastric carcinoma cell lines." in crispr_method
+      ENSG00000165392-EFO_1001951:
+        # Testing the crispr evidence for this pair:
+        - |-
+          parser = jp.parse('data[*]')
+          crispr_evidence = [evidence['evidence']['resource_score']['value'] for evidence in to_vlist(parser.find(d)) if evidence['sourceID'] == 'crispr']
+          output = 0.7375 in crispr_evidence
+        - |-
+          parser = jp.parse('data[*]')
+          crispr_method = [evidence['evidence']['resource_score']['method']['description'] for evidence in to_vlist(parser.find(d)) if evidence['sourceID'] == 'crispr']
+          output = "147 targets were prioritised based on CRISPR screens in 31 colorectal carcinoma cell lines." in crispr_method    
       ENSG00000166278-EFO_0001365:
         # Testing if a given variant is in the evidence set:
         - |-
