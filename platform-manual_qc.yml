@@ -1,0 +1,345 @@
+checkomatic:
+  client:
+    host: https://platform-api.opentargets.io
+    port: 443
+    size: 1000 # max size to fetch when query and it is applicable
+  rules:
+    associations:
+      targets:
+        BRAF:
+          - |-
+            parser = jp.parse('data[*].disease.efo_info.label')
+            output = 'melanoma' in to_vset(parser.find(d))
+        CD86:
+          - |-
+            parser = jp.parse('data[*].disease.efo_info.label')
+            output = 'multiple sclerosis' in to_vset(parser.find(d))    
+        ITGAL:
+          - |-
+            parser = jp.parse('data[*].disease.efo_info.label')
+            output = 'inflammatory bowel disease' in to_vset(parser.find(d))
+        DMD:
+          - |-
+            parser = jp.parse('data[*].disease.efo_info.label')
+            output = 'Duchenne muscular dystrophy' in to_vset(parser.find(d))    
+        AGTR1:
+          - |-
+            parser = jp.parse('data[*].disease.efo_info.label')
+            output = 'COVID-19' in to_vset(parser.find(d))
+      diseases:
+        EFO_0003767:
+          # Checking if a ceratin set of genes is associated with the disease:
+          - |-
+            parser = jp.parse('data[*].target.gene_info.symbol')
+            output = not set(['NOD2', 'IL10RA', 'IL23R', 'IRF5', 'ITGAL']) - to_vset(parser.find(d))
+          # Checking if there's strong genetic association with the ofllowing genes:
+          - |-
+            parser = jp.parse('data[*]')
+            gene_sets = ['NOD2', 'IL10RA', 'IL23R', 'IRF5']
+            is_genetic_high = [ association['association_score']['datatypes']['genetic_association'] > 0.8 for association in to_vlist(parser.find(d)) if association['target']['gene_info']['symbol'] in gene_sets ]
+            output = all(is_genetic_high)
+          # Check if the genetic associatin is weak:
+          - |-
+            parser = jp.parse('data[*]')
+            is_genetic_high = [ association['association_score']['datatypes']['genetic_association'] < 0.4 for association in to_vlist(parser.find(d)) if association['target']['gene_info']['symbol'] == 'ITGAL' ]
+            output = all(is_genetic_high)
+        EFO_0000384:
+          # Checking if the following genes are associated with the disease:
+          - |-
+            parser = jp.parse('data[*].target.gene_info.symbol')
+            output = not set(['NOD2', 'SMAD3', 'TNF', 'PTGS2']) - to_vset(parser.find(d))
+          # Checking if no genetic evidence supports the association for PTGS2:
+          - |-
+            parser = jp.parse('data[*]')
+            is_genetic_exist = [ 'genetic_association' in association['association_score']['datatypes'] for association in to_vlist(parser.find(d)) if association['target']['gene_info']['symbol'] == 'PTGS2' ]
+            output = all(is_genetic_exist)
+    searches:
+      diseases:
+        "Hyperlordosis":
+          - len(o.data) > 110
+          - |-
+            parser = jp.parse('data[*].data.id')
+            disease_ids = to_vlist(parser.find(d))
+            tested_ids = ["Orphanet_262","Orphanet_253"]
+            output = all([x in disease_ids for x in disease_ids])
+        "Joint Swelling":
+          - ("HP_0001386" in o.data[0].data.id)
+          - len(o.data) > 1100
+          - |-
+            parser = jp.parse('data[*].data.efo_synonyms[*]')
+            phenotypes = to_vlist(parser.find(d))
+            tested_phenotypes = ["spondyloarthropathy","joint disease","skin disease", "brain disease", "bacterial disease", "ankylosing spondylitis"]
+            output = all([x.lower() in phenotypes for x in tested_phenotypes])
+    diseases:
+      Orphanet_262:
+        - o.label == 'Duchenne and Becker muscular dystrophy'
+        - ('Severe dystrophinopathy, Duchenne and Becker type' in o.efo_synonyms)
+        - ('nervous system disease' in o.therapeutic_labels)
+        - |-
+          parser = jp.parse('phenotypes[*].label')
+          output = 'Gait disturbance' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('phenotypes[*].label')
+          phenotypes = to_vlist(parser.find(d))
+          tested_phenotypes = ["Cognitive impairment","EMG abnormality","Developmental regression"]
+          output = all([x in phenotypes for x in tested_phenotypes])
+      Orphanet_166:
+        - |-
+          parser = jp.parse('phenotypes[*].label')
+          phenotypes = to_vlist(parser.find(d))
+          tested_phenotypes = ["Abnormality of the pharynx","Gait disturbance"]
+          output = all([x in phenotypes for x in tested_phenotypes])
+      EFO_0003885:
+        - |-
+          parser = jp.parse('phenotypes[*].label')
+          phenotypes = to_vlist(parser.find(d))
+          tested_phenotypes = ["Abnormality of the immune system", "Optic neuritis", "Age of death"]
+          output = all([x in phenotypes for x in tested_phenotypes])
+    targets:
+      ENSG00000167397:
+        # Checking drug for gene:
+        - |-
+          parser = jp.parse('drugs.chembl_drugs[*].synonyms[*]')
+          output = 'Coumadin' in to_vlist(parser.find(d))
+      ENSG00000135446:
+        # Checking if the following cancer hallmark annotation is found:
+        - |-
+          parser = jp.parse('hallmarks.cancer_hallmarks[*]')
+          promoted = [x['label'] for x in to_vlist(parser.find(d)) if x['promote'] ]
+          output = 'cell replicative immortality' in promoted
+      ENSG00000157764:
+        # Checking if the following cancer hallmark annotation is found:
+        - |-
+          parser = jp.parse('hallmarks.cancer_hallmarks[*]')
+          promoted = [x['label'] for x in to_vlist(parser.find(d)) if x['promote'] ]
+          output = not set(['proliferative signalling', 'escaping programmed cell death']) - set(promoted)
+      ENSG00000139687:
+        # Checking if the following cancer hallmark annotation is found - for promote:
+        - |-
+          parser = jp.parse('hallmarks.cancer_hallmarks[*]')
+          promoted = [x['label'] for x in to_vlist(parser.find(d)) if x['promote'] ]
+          expected_promoted = set(['suppression of growth', 'escaping programmed cell death', 'change of cellular energetics'])
+          output = not expected_promoted - set(promoted)
+        # Checking if the following cancer hallmark annotation is found - for supress:
+        - |-
+          parser = jp.parse('hallmarks.cancer_hallmarks[*]')
+          supressed = [ x['label'] for x in to_vlist(parser.find(d)) if x['suppress'] ]
+          expected_supressed = set(['invasion and metastasis', 'genome instability and mutations'])
+          output = not expected_supressed - set(supressed)
+      ENSG00000141736:
+        # Checking if the following cancer hallmark annotation is found:
+        - |-
+          parser = jp.parse('hallmarks.cancer_hallmarks[*]')
+          promoted = [x['label'] for x in to_vlist(parser.find(d)) if x['promote'] ]
+          expected_promoted = set(['proliferative signalling', 'invasion and metastasis', 'escaping programmed cell death', 'change of cellular energetics'])
+          output = not expected_promoted - set(promoted) 
+      ENSG00000141510:
+        # Checking if the following cancer hallmark annotation is found - for promote:
+        - |-
+          parser = jp.parse('hallmarks.cancer_hallmarks[*]')
+          promoted = [x['label'] for x in to_vlist(parser.find(d)) if x['promote'] ]
+          expected_promoted = set(['suppression of growth', 'change of cellular energetics', 'cell replicative immortality', 'escaping programmed cell death'])
+          output = not expected_promoted - set(promoted)
+        # Checking if the following cancer hallmark annotation is found - for supress:
+        - |-
+          parser = jp.parse('hallmarks.cancer_hallmarks[*]')
+          supressed = [ x['label'] for x in to_vlist(parser.find(d)) if x['suppress'] ]
+          expected_supressed = set(['tumour promoting inflammation', 'invasion and metastasis', 'angiogenesis', 'genome instability and mutations', 'cell replicative immortality', 'escaping programmed cell death'])
+          output = not expected_supressed - set(supressed)
+    evidences:
+      ENSG00000166278-EFO_0001365:
+        # Testing if a given variant is in the evidence set:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs547154' in to_vlist(parser.find(d))
+        # Testing if a given variant is protective in EVA
+        - |-
+          parser = jp.parse('data[*]')
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs547154']
+          output = 'protective' in clinical_significance
+        # Testing for sequence ontology term: intron variant
+        - |-
+          parser = jp.parse('data[*]')
+          evidence_codes = [x['evidence']['evidence_codes'] for x in to_vlist(parser.find(d)) if x['unique_association_fields']['variant_id'] == 'rs547154']
+          output = b'SO_0001627' in evidence_codes[0]
+      ENSG00000198901-EFO_0006318:
+        # Testing if a given variant is in the evidence set:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs10520699' in to_vlist(parser.find(d))
+        # Testing if a given variant is association in EVA
+        - |-
+          parser = jp.parse('data[*]')
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs10520699']
+          output = 'association' in clinical_significance
+        # Testing for sequence ontology term: intron variant
+        - |-
+          parser = jp.parse('data[*]')
+          evidence_codes = [x['evidence']['evidence_codes'] for x in to_vlist(parser.find(d)) if x['unique_association_fields']['variant_id'] == 'rs10520699']
+          output = b'SO_0001627' in evidence_codes[0]  
+      ENSG00000169738-Orphanet_2843:
+        # Testing if a given variant is in the evidence set:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs375243154' in to_vlist(parser.find(d))
+        # Testing if a given variant is "Affects" in EVA
+        - |-
+          parser = jp.parse('data[*]')
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs375243154']
+          output = 'Affects' in clinical_significance
+        # Testing for sequence ontology term: splice donor variant
+        - |-
+          parser = jp.parse('data[*]')
+          evidence_codes = [x['evidence']['evidence_codes'] for x in to_vlist(parser.find(d)) if x['unique_association_fields']['variant_id'] == 'rs375243154']
+          output = b'SO_0001575' in evidence_codes[0]          
+      ENSG00000197408-EFO_0006906:
+        # Testing if a given variant is in the evidence set:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs281864907' in to_vlist(parser.find(d))
+        # Testing if a given variant is drug response in EVA
+        - |-
+          parser = jp.parse('data[*]')
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs281864907']
+          output = 'drug response' in clinical_significance
+        # Testing for sequence ontology term: stop gained variant
+        - |-
+          parser = jp.parse('data[*]')
+          evidence_codes = [x['evidence']['evidence_codes'] for x in to_vlist(parser.find(d)) if x['unique_association_fields']['variant_id'] == 'rs281864907']
+          output = b'SO_0001587' in evidence_codes[0]           
+      ENSG00000110435-Orphanet_255182:
+        # Testing if a given variant is in the evidence set:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs724159829' in to_vlist(parser.find(d))
+        # Testing if a given variant is "Pathogenic" in EVA
+        - |-
+          parser = jp.parse('data[*]')
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs724159829']
+          output = 'Pathogenic' in clinical_significance
+        # Testing for sequence ontology term: splice donor variant
+        - |-
+          parser = jp.parse('data[*]')
+          evidence_codes = [x['evidence']['evidence_codes'] for x in to_vlist(parser.find(d)) if x['unique_association_fields']['variant_id'] == 'rs724159829']
+          output = b'SO_0001575' in evidence_codes[0]          
+      ENSG00000164953-Orphanet_564:
+        # Testing if a given variant is in the evidence set:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs386834191' in to_vlist(parser.find(d))
+        # Testing if a given variant is "Likely pathogenic" in EVA
+        - |-
+          parser = jp.parse('data[*]')
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs386834191']
+          output = 'Likely pathogenic' in clinical_significance
+        # Testing for sequence ontology term: splice donor variant
+        - |-
+          parser = jp.parse('data[*]')
+          evidence_codes = [x['evidence']['evidence_codes'] for x in to_vlist(parser.find(d)) if x['unique_association_fields']['variant_id'] == 'rs386834191']
+          output = b'SO_0001589' in evidence_codes[0]          
+      ENSG00000167207-EFO_0003767:
+        - |-
+          parser = jp.parse('data[*].type')
+          genetics = [x for x in to_vlist(parser.find(d)) if x == "genetic_association"]
+          output = len(genetics) > 50
+      ENSG00000206172-Orphanet_93616:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs35672478' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs28928878' in to_vlist(parser.find(d))
+      ENSG00000244734-Orphanet_848:
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          uniprot_literature = [x for x in to_vlist(parser.find(d)) if x == "uniprot_literature"]
+          output = len(uniprot_literature) >= 5
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          genomics_england = [x for x in to_vlist(parser.find(d)) if x == "genomics_england"]
+          output = len(genomics_england) >= 4
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          eva = [x for x in to_vlist(parser.find(d)) if x == "eva"]
+          output = len(eva) >= 5
+      ENSG00000188536-Orphanet_846:
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          uniprot_literature = [x for x in to_vlist(parser.find(d)) if x == "uniprot_literature"]
+          output = len(uniprot_literature) >= 1
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          genomics_england = [x for x in to_vlist(parser.find(d)) if x == "genomics_england"]
+          output = len(genomics_england) >= 4
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          eva = [x for x in to_vlist(parser.find(d)) if x == "eva"]
+          output = len(eva) >= 20
+      ENSG00000001626-Orphanet_586:
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          uniprot_literature = [x for x in to_vlist(parser.find(d)) if x == "uniprot_literature"]
+          output = len(uniprot_literature) >= 1
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          genomics_england = [x for x in to_vlist(parser.find(d)) if x == "genomics_england"]
+          output = len(genomics_england) >= 2
+        - |-
+          parser = jp.parse('data[*].sourceID')
+          eva = [x for x in to_vlist(parser.find(d)) if x == "eva"]
+          output = len(eva) >= 20
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs75527207' in to_vlist(parser.find(d))
+      ENSG00000204842-Orphanet_98756:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.clinvarAccession')
+          output = 'RCV000055892' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*]')
+          so_set = [ evidence['evidence']['evidence_codes'] for evidence in to_vlist(parser.find(d)) if evidence['unique_association_fields']['variant_id'] == 'RCV000055892']
+          output = 'SO_0002165' in so_set[0]
+      ENSG00000104936-Orphanet_273:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.clinvarAccession')
+          output = 'RCV000005352' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*]')
+          so_set = [ evidence['evidence']['evidence_codes'] for evidence in to_vlist(parser.find(d)) if evidence['unique_association_fields']['variant_id'] == 'RCV000005352']
+          output = 'SO_0002165' in so_set[0]
+      ENSG00000102081-Orphanet_908:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.clinvarAccession')
+          output = 'RCV000010651' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*]')
+          so_set = [ evidence['evidence']['evidence_codes'] for evidence in to_vlist(parser.find(d)) if evidence['unique_association_fields']['variant_id'] == 'RCV000010651']
+          output = 'SO_0002165' in so_set[0]
+      ENSG00000102081-Orphanet_93256:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.clinvarAccession')
+          output = 'RCV000010652' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*]')
+          so_set = [ evidence['evidence']['evidence_codes'] for evidence in to_vlist(parser.find(d)) if evidence['unique_association_fields']['variant_id'] == 'RCV000010652']
+          output = 'SO_0002165' in so_set[0]        
+      ENSG00000155966-Orphanet_100973:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs193922937' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*]')
+          so_set = [ evidence['evidence']['evidence_codes'] for evidence in to_vlist(parser.find(d)) if evidence['unique_association_fields']['variant_id'] == 'rs193922937']
+          output = 'SO_0002165' in so_set[0]        
+      ENSG00000197386-Orphanet_399:
+        - |-
+          parser = jp.parse('data[*].unique_association_fields.variant_id')
+          output = 'rs71180116' in to_vlist(parser.find(d))
+        - |-
+          parser = jp.parse('data[*]')
+          so_set = [ evidence['evidence']['evidence_codes'] for evidence in to_vlist(parser.find(d)) if evidence['unique_association_fields']['variant_id'] == 'rs71180116']
+          output = 'SO_0002165' in so_set[0]
+
+
+
+
