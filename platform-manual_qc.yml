@@ -38,6 +38,18 @@ checkomatic:
             parser = jp.parse('data[*].disease.efo_info.label')
             output = 'COVID-19' in to_vset(parser.find(d))
       diseases:
+        # Checking sysbio supported associations.
+        EFO_0003767:
+          - o.data[0].disease.efo_info.label == 'inflammatory bowel disease'
+          - |-
+            parser = jp.parse('data[*].association_score.datasources.sysbio')
+            sysbio_assoc = [x for x in to_vlist(parser.find(d)) if x > 0]
+            output = len(sysbio_assoc) == 211
+          - |-
+            parser = jp.parse('data[*]')
+            genes_to_check = set(['IL10RA', 'APOL2', 'GAB3', 'SNX10'])
+            sysbio_assoc = [assoc['target']['gene_info']['symbol'] for assoc in to_vlist(parser.find(d)) if assoc['association_score']['datasources']['sysbio'] > 0]
+            output = len(sysbio_assoc) == 211
         EFO_0001071:
           # Checking if at least 110 targets are associated to this disease supported by crispr:
           - |-
@@ -136,7 +148,27 @@ checkomatic:
         - o.approved_symbol == 'BRAF'
         # Test number of entries:
         - len(o.cancerbiomarkers) == 82
-
+        # Test if a given biomarker is found:
+        - |-
+          parser = jp.parse('cancerbiomarkers[*].references.other[*].name')
+          output = "ASCO 2017 (abstr 9072)" in to_vset(parser.find(d))
+        # Test if a give filter applied gives the expected results:
+        - |-
+          parser = jp.parse('cancerbiomarkers[*]')
+          biomarkers = []
+          [biomarkers.append(biomarker['references']['other'][0]['name']) for biomarker in to_vlist(parser.find(d)) if 
+            biomarker['association'] == 'Responsive' and 
+            biomarker['evidencelevel'] == "Case report" and 
+            len(biomarker['references']['other']) > 0 and 
+            biomarker['drugfullname'] == "BRAF inhibitor + MEK inhibitors" 
+          ]
+          output = "ASCO 2017 (abstr 9072)" in biomarkers
+        # Test if there are 24 case reports:
+        - |-
+          parser = jp.parse('cancerbiomarkers[*]')
+          biomarkers = []
+          [ biomarkers.append(biomarker) for biomarker in to_vlist(parser.find(d)) if biomarker['evidencelevel'] == "Case report" ]
+          output = len(biomarkers) == 24
       # Testing tractability:
       ENSG00000167207:
         - o.approved_symbol == 'NOD2'
@@ -334,6 +366,19 @@ checkomatic:
           expected_supressed = set(['tumour promoting inflammation', 'invasion and metastasis', 'angiogenesis', 'genome instability and mutations', 'cell replicative immortality', 'escaping programmed cell death'])
           output = not expected_supressed - set(supressed)
     evidences:
+      # Testing sysbio evidence:
+      ENSG00000110324-EFO_0003767:
+        - o.data[0].target.gene_info.symbol == 'IL10RA'
+        # Test for key driver genes in the sysbio set:
+        - |-
+          parser = jp.parse('data[*]')
+          gene_sets = [ evidence['unique_association_fields']['gene_set'] for evidence in to_vlist(parser.find(d)) if evidence['sourceID'] == 'sysbio' ]
+          output = "Intestine Key Driver Genes" in gene_sets
+        # Test for the publication supporting sysbio evidence:
+        - |-
+          parser = jp.parse('data[*]')
+          pmids = [ evidence['unique_association_fields']['pmid'] for evidence in to_vlist(parser.find(d)) if evidence['sourceID'] == 'sysbio' ]
+          output = "28892060" in pmids
       ENSG00000133112-EFO_0001071:
         # Testing the crispr evidence for this pair:
         - |-
@@ -556,7 +601,5 @@ checkomatic:
           parser = jp.parse('data[*]')
           so_set = [ evidence['evidence']['evidence_codes'] for evidence in to_vlist(parser.find(d)) if evidence['unique_association_fields']['variant_id'] == 'rs71180116']
           output = 'SO_0002165' in so_set[0]
-
-
 
 
