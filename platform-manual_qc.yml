@@ -175,7 +175,7 @@ checkomatic:
         # Check small molecule buckets - in druggable genome:
         - o.tractability.smallmolecule.small_molecule_genome_member
         # Check small molecule buckets - in chembl:
-        - o.tractability.smallmolecule.high_quality_compounds > 0
+        - 7 in o.tractability.smallmolecule.buckets
         # Check small molecule buckets - phase 4:
         - o.tractability.smallmolecule.buckets[0] == 1
         # Check antibody buckets:
@@ -291,11 +291,11 @@ checkomatic:
       # Testing chemical probes:
       ENSG00000005339:
         # Is there all four probes:
-        - len( o.chemicalprobes.portalprobes) == 4
+        - len( o.chemicalprobes.portalprobes) == 5
         # Are the probes these:
         - |-
           parser = jp.parse('chemicalprobes.portalprobes[*].chemicalprobe')
-          probes = set(['A-485','PF-CBP1','I-CBP112','SGC-CBP30'])
+          probes = set(['A-485','PF-CBP1','I-CBP112','SGC-CBP30', 'CPI-1612'])
           output = not probes - to_vset(parser.find(d))
         # Testing if the links to the probes are there:
         - |-
