@@ -175,7 +175,7 @@ checkomatic:
         # Check small molecule buckets - in druggable genome:
         - o.tractability.smallmolecule.small_molecule_genome_member
         # Check small molecule buckets - in chembl:
-        - 7 in o.tractability.smallmolecule.buckets
+        - 8 in o.tractability.smallmolecule.buckets
         # Check small molecule buckets - phase 4:
         - o.tractability.smallmolecule.buckets[0] == 1
         # Check antibody buckets:
@@ -417,7 +417,7 @@ checkomatic:
         # Testing if a given variant is protective in EVA
         - |-
           parser = jp.parse('data[*]')
-          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs547154']
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'][0] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs547154']
           output = 'protective' in clinical_significance
         # Testing for sequence ontology term: intron variant
         - |-
@@ -432,7 +432,7 @@ checkomatic:
         # Testing if a given variant is association in EVA
         - |-
           parser = jp.parse('data[*]')
-          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs10520699']
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'][0] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs10520699']
           output = 'association' in clinical_significance
         # Testing for sequence ontology term: intron variant
         - |-
@@ -447,8 +447,8 @@ checkomatic:
         # Testing if a given variant is "Affects" in EVA
         - |-
           parser = jp.parse('data[*]')
-          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs375243154']
-          output = 'Affects' in clinical_significance
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'][0] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs375243154']
+          output = 'affects' in clinical_significance
         # Testing for sequence ontology term: splice donor variant
         - |-
           parser = jp.parse('data[*]')
@@ -462,7 +462,7 @@ checkomatic:
         # Testing if a given variant is drug response in EVA
         - |-
           parser = jp.parse('data[*]')
-          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs281864907']
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'][0] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs281864907']
           output = 'drug response' in clinical_significance
         # Testing for sequence ontology term: stop gained variant
         - |-
@@ -477,8 +477,8 @@ checkomatic:
         # Testing if a given variant is "Pathogenic" in EVA
         - |-
           parser = jp.parse('data[*]')
-          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs724159829']
-          output = 'Pathogenic' in clinical_significance
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'][0] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs724159829']
+          output = 'pathogenic' in clinical_significance
         # Testing for sequence ontology term: splice donor variant
         - |-
           parser = jp.parse('data[*]')
@@ -492,13 +492,35 @@ checkomatic:
         # Testing if a given variant is "Likely pathogenic" in EVA
         - |-
           parser = jp.parse('data[*]')
-          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs386834191']
-          output = 'Likely pathogenic' in clinical_significance
+          clinical_significance = [x['evidence']['variant2disease']['clinical_significance'][0] for x in to_vlist(parser.find(d)) if x['sourceID'] == "eva" and x['unique_association_fields']['variant_id'] == 'rs386834191']
+          output = 'likely pathogenic' in clinical_significance
         # Testing for sequence ontology term: splice donor variant
         - |-
           parser = jp.parse('data[*]')
           evidence_codes = [x['evidence']['evidence_codes'] for x in to_vlist(parser.find(d)) if x['unique_association_fields']['variant_id'] == 'rs386834191']
           output = b'SO_0001589' in evidence_codes[0]          
+      # Testign new fields introduced to EVA evidences in 20.11:
+      ENSG00000155961-EFO_0002508:
+        - |-
+          parser = jp.parse('data[*]')
+          eva_evidence = [x for x in to_vlist(parser.find(d)) if x['sourceID'] == 'eva']
+          eva_selected_evidence = [x['evidence'] for x in eva_evidence if x['variant']['id'] == 'http://identifiers.org/dbsnp/rs864309529']
+          output = b'variant2disease' in eva_selected_evidence[0]
+        - |-
+          parser = jp.parse('data[*]')
+          eva_evidence = [x for x in to_vlist(parser.find(d)) if x['sourceID'] == 'eva']
+          eva_selected_evidence = [x['evidence'] for x in eva_evidence if x['variant']['id'] == 'http://identifiers.org/dbsnp/rs864309529']
+          output = b'mode_of_inheritance' in eva_selected_evidence[0]['variant2disease']          
+        - |-
+          parser = jp.parse('data[*]')
+          eva_evidence = [x for x in to_vlist(parser.find(d)) if x['sourceID'] == 'eva']
+          eva_selected_evidence = [x['evidence'] for x in eva_evidence if x['variant']['id'] == 'http://identifiers.org/dbsnp/rs864309529']
+          output = b'clinvar_rating' in eva_selected_evidence[0]['variant2disease']
+        - |-
+          parser = jp.parse('data[*]')
+          eva_evidence = [x for x in to_vlist(parser.find(d)) if x['sourceID'] == 'eva']
+          eva_selected_evidence = [x['evidence'] for x in eva_evidence if x['variant']['id'] == 'http://identifiers.org/dbsnp/rs864309529']
+          output = b'star_rating' in eva_selected_evidence[0]['variant2disease']['clinvar_rating'] and b'review_status' in eva_selected_evidence[0]['variant2disease']['clinvar_rating']
       ENSG00000167207-EFO_0003767:
         - |-
           parser = jp.parse('data[*].type')
@@ -519,7 +541,7 @@ checkomatic:
         - |-
           parser = jp.parse('data[*].sourceID')
           genomics_england = [x for x in to_vlist(parser.find(d)) if x == "genomics_england"]
-          output = len(genomics_england) >= 4
+          output = len(genomics_england) >= 3
         - |-
           parser = jp.parse('data[*].sourceID')
           eva = [x for x in to_vlist(parser.find(d)) if x == "eva"]
@@ -588,10 +610,10 @@ checkomatic:
       ENSG00000155966-Orphanet_100973:
         - |-
           parser = jp.parse('data[*].unique_association_fields.variant_id')
-          output = 'rs193922937' in to_vlist(parser.find(d))
+          output = 'RCV000011272' in to_vlist(parser.find(d))
         - |-
           parser = jp.parse('data[*]')
-          so_set = [ evidence['evidence']['evidence_codes'] for evidence in to_vlist(parser.find(d)) if evidence['unique_association_fields']['variant_id'] == 'rs193922937']
+          so_set = [ evidence['evidence']['evidence_codes'] for evidence in to_vlist(parser.find(d)) if evidence['unique_association_fields']['variant_id'] == 'RCV000011272']
           output = 'SO_0002165' in so_set[0]
       ENSG00000197386-Orphanet_399:
         - |-
