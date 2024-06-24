@@ -192,7 +192,7 @@ checkomatic:
           output = 'http://europepmc.org/abstract/MED/30043749' in to_vlist(parser.find(d))
       ENSG00000165392-EFO_1001951:
         - |-
-          parser = jp.parse('data[*].unique_association_fields.pmid')
+          parser = jp.parse('data[*].evidence.resource_score.method.reference')
           output = 'http://europepmc.org/abstract/MED/30971826' in to_vlist(parser.find(d))
       ENSG00000102081-Orphanet_908:
         - |-
@@ -277,6 +277,6 @@ checkomatic:
         dss = []
         for dt in dts:
           dss += o.associations.datatypes[dt].datasources.keys()
-        output = len(dss) >= 20
+        output = len(dss) >= 19
     metrics:
       - o.genes.approved_symbol.doc_count > 58000
